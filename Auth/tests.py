@@ -32,7 +32,7 @@ class TestUsers(APITestCase):
 
     def test_create_user_duplicate_username(self):
         url = reverse('users-list')
-        self.client.post(url, self.user_data, format='json')
+        response = self.client.post(url, self.user_data, format='json')
         self.assertEqual(response.status_code,status.HTTP_201_CREATED)
         response = self.client.post(url, self.user_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
