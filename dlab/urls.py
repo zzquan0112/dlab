@@ -21,4 +21,5 @@ from Auth.views import UserListView, UserDetailView
 
 urlpatterns = [
     path('users-list', UserListView.as_view(), name='users-list'),
+    path('users/<int:pk>/', UserDetailView.as_view(), name ='users-detail'),
 ]
