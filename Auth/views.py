@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 from rest_framework import status
 from .models import User
 from .Serializers import UserSerializer
-from rest_framework.permissions import IsAdminUser, BasePermission
+from rest_framework.permissions import IsAdminUser, BasePermission, IsAuthenticated
 
 class IsAdminOrReadOnly(IsAdminUser):
     def has_permission(self, request, view):
@@ -14,7 +14,7 @@ class IsAdminOrReadOnly(IsAdminUser):
     
 
 class UserListView(APIView):
-    permission_classes = [IsAdminOrReadOnly]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         users = User.objects.all()
@@ -42,7 +42,7 @@ class UserDetailView(APIView):
         except User.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-    def get(self, pk):
+    def get(self, request, pk):
         user = self.get_object(pk)
         serializer = UserSerializer(user)
         return Response(serializer.data)

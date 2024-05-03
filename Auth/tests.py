@@ -14,27 +14,32 @@ class TestUsers(APITestCase):
             'email': 'jojo@email.com', 
             'password': 'jojopassword'
         }
+        self.user = User.objects.create_user(**self.user_data)
+        self.client.force_authenticate(user=self.user)
+        self.user2_data = {
+            'username': 'hana',
+            'email': 'hana@gmail.com',
+            'password': 'hanapassword'
+        }
 
     def test_create_user(self):
         url = reverse('users-list')
-        response = self.client.post(url, self.user_data, format='json')
+        response = self.client.post(url, self.user2_data, format='json')
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(User.objects.count(), 1)
+        self.assertEqual(User.objects.count(), 2)
         user = User.objects.get(username='jojo')
         self.assertEqual(user.email, 'jojo@email.com')
 
     def test_create_user_invalid_data(self):
         url = reverse('users-list')
-        bad_data = self.user_data.copy()
+        bad_data = self.user2_data.copy()
         bad_data['email'] = 'invalid'
         response = self.client.post(url, bad_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(User.objects.count(), 0)
+        self.assertEqual(User.objects.count(), 1)
 
     def test_create_user_duplicate_username(self):
         url = reverse('users-list')
-        response = self.client.post(url, self.user_data, format='json')
-        self.assertEqual(response.status_code,status.HTTP_201_CREATED)
         response = self.client.post(url, self.user_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(User.objects.count(), 1)
@@ -42,7 +47,7 @@ class TestUsers(APITestCase):
     def test_get_user(self):
         # need to fix AttributeError: 'TestUsers' object has no attribute 'user'
         # create object to fix this
-        user = User.objects.create_user(**self.user_data)
+        user = self.user
         url = reverse('users-detail', args=[user.id])
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -57,7 +62,7 @@ class TestUsers(APITestCase):
         self.assertEqual(len(response.data), 3)
 
     def test_update_user(self):
-        user = User.objects.create_user(**self.user_data)
+        user = self.user
         url = reverse('users-detail', args=[user.id])
         data = {'username': 'nina', 'email': 'nina@example.com'}
         response = self.client.patch(url, data, format = 'json')
@@ -67,12 +72,12 @@ class TestUsers(APITestCase):
         self.assertEqual(user.email, 'nina@example.com')
 
     def test_delete_user(self):
-        user = User.objects.create_user(**self.user_data)
+        user = self.user
         self.client.force_authenticate(user=user)
         url = reverse('users-detail', args=[user.id])
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        self.assertTrue(User.objects.filter(id=user.id).exists())
+        self.assertFalse(User.objects.filter(id=user.id).exists())
 
     def test_delete_nonexistent_user(self):
         url = reverse('users-detail', args=[999])
