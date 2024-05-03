@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient, APITestCase
 from rest_framework import status
 from django.urls import reverse
+from django.test import Client
 
 # Create your tests here.
 User = get_user_model()
@@ -39,6 +40,8 @@ class TestUsers(APITestCase):
         self.assertEqual(User.objects.count(), 1)
 
     def test_get_user(self):
+        # need to fix AttributeError: 'TestUsers' object has no attribute 'user'
+        # create object to fix this
         url = reverse('users-detail', args=[self.user.id])
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -64,9 +67,11 @@ class TestUsers(APITestCase):
 
     def test_delete_user(self):
         user = User.objects.create_user(**self.user_data)
+        self.client.force_authenticate(user=user)
         url = reverse('users-detail', args=[user.id])
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        #Error, need to use asserttrue or change value
         self.assertEqual(User.objects.filter(id=user.id).exists())
 
     def test_delete_nonexistent_user(self):

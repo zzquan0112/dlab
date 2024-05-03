@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 from rest_framework import status
 from .models import User
 from .Serializers import UserSerializer
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, BasePermission
 
 class IsAdminOrReadOnly(IsAdminUser):
     def has_permission(self, request, view):
@@ -28,9 +28,13 @@ class UserListView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+# Fix authentication problem for delete, allow owner to delete itself
+class IsAdminOrOwner(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return obj == request.user or request.user.is_staff
 
 class UserDetailView(APIView):
-    permission_classes = [IsAdminOrReadOnly]
+    permission_classes = [IsAdminOrOwner]
 
     def get_object(self, request, pk):
         try:
@@ -51,7 +55,14 @@ class UserDetailView(APIView):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    def get_object(self, pk):
+        try:
+            return User.objects.get(pk=pk)
+        except User.DoesNotExist:
+            return None
+    
     def delete(self, request, pk):
+        print("PK received:", pk)
         user = self.get_object(pk)
         if user:
             user.delete()
