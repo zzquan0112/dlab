@@ -42,7 +42,8 @@ class TestUsers(APITestCase):
     def test_get_user(self):
         # need to fix AttributeError: 'TestUsers' object has no attribute 'user'
         # create object to fix this
-        url = reverse('users-detail', args=[self.user.id])
+        user = User.objects.create_user(**self.user_data)
+        url = reverse('users-detail', args=[user.id])
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['username'], 'jojo')
@@ -56,7 +57,7 @@ class TestUsers(APITestCase):
         self.assertEqual(len(response.data), 3)
 
     def test_update_user(self):
-        user = User.objects.create_user(self.user_data)
+        user = User.objects.create_user(**self.user_data)
         url = reverse('users-detail', args=[user.id])
         data = {'username': 'nina', 'email': 'nina@example.com'}
         response = self.client.patch(url, data, format = 'json')
@@ -71,8 +72,7 @@ class TestUsers(APITestCase):
         url = reverse('users-detail', args=[user.id])
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        #Error, need to use asserttrue or change value
-        self.assertEqual(User.objects.filter(id=user.id).exists())
+        self.assertTrue(User.objects.filter(id=user.id).exists())
 
     def test_delete_nonexistent_user(self):
         url = reverse('users-detail', args=[999])
