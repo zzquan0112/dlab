@@ -1,17 +1,9 @@
-from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
 from .models import User
 from .Serializers import UserSerializer
-from rest_framework.permissions import IsAdminUser, BasePermission, IsAuthenticated
-
-class IsAdminOrReadOnly(IsAdminUser):
-    def has_permission(self, request, view):
-        if request.method in ['GET', 'HEAD', 'OPTIONS']:
-            return True
-        return super().has_permission(request, view)
-    
+from rest_framework.permissions import BasePermission, IsAuthenticated
 
 class UserListView(APIView):
     permission_classes = [IsAuthenticated]
@@ -36,12 +28,6 @@ class IsAdminOrOwner(BasePermission):
 class UserDetailView(APIView):
     permission_classes = [IsAdminOrOwner]
 
-    def get_object(self, request, pk):
-        try:
-            return User.objects.get(pk=pk)
-        except User.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-
     def get(self, request, pk):
         user = self.get_object(pk)
         serializer = UserSerializer(user)
@@ -62,7 +48,6 @@ class UserDetailView(APIView):
             return None
     
     def delete(self, request, pk):
-        print("PK received:", pk)
         user = self.get_object(pk)
         if user:
             user.delete()
@@ -70,3 +55,10 @@ class UserDetailView(APIView):
         else:
             return Response(status=status.HTTP_404_NOT_FOUND)
     
+    def patch(self, request, pk):
+        user = self.get_object(pk)
+        serializer = UserSerializer(user, data=request.data, partial = True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

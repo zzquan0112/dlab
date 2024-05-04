@@ -2,9 +2,7 @@ from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient, APITestCase
 from rest_framework import status
 from django.urls import reverse
-from django.test import Client
 
-# Create your tests here.
 User = get_user_model()
 class TestUsers(APITestCase):
     def setUp(self):
@@ -45,8 +43,6 @@ class TestUsers(APITestCase):
         self.assertEqual(User.objects.count(), 1)
 
     def test_get_user(self):
-        # need to fix AttributeError: 'TestUsers' object has no attribute 'user'
-        # create object to fix this
         user = self.user
         url = reverse('users-detail', args=[user.id])
         response = self.client.get(url)
