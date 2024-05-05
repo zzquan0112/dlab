@@ -1,7 +1,23 @@
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient, APITestCase
+from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import status
 from django.urls import reverse
+
+class UserTestWithToken(APITestCase):
+    def setUp(self):
+        self.user_data = {
+            'username': 'jojo', 
+            'email': 'jojo@email.com', 
+            'password': 'jojopassword'
+        }
+        self.user = User.objects.create_user(**self.user_data)
+        self.token = RefreshToken.for_user(self.user)
+    def test_user_list(self):
+        url = reverse('users-list')
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.token.access_token}')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 User = get_user_model()
 class TestUsers(APITestCase):
